@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Game : MonoBehaviour {
+	public GameObject lightSquarePrefab;
+	public GameObject darkSquarePrefab;
+	private GameObject squareInstance;
+	// prefabs in order of pawn, knight, bishops, rook, king, queen
+	public Piece[] whitePiecesPrefabs = new Piece[6];
+	public Piece[] blackPiecesPrefabs = new Piece[6];
 	string[,] chessboard = {
 		// first letter = color, second letter = piece
 		// R = rook, N = knight, B = bishop, Q = queen, K = king, P = pawn
@@ -22,7 +28,9 @@ public class Game : MonoBehaviour {
 	bool BRRookMoved = false;
 	bool WLRookMoved = false;
 	bool WRRookMoved = false;
+	int[] currentTile = { 0, 0 };
 	string currentPlayer = "W";
+	int[] lastMove = { 0, 0 };
 	bool whiteChecked = false;
 	bool blackChecked = false;
 	bool Stalemate = false;
@@ -30,6 +38,81 @@ public class Game : MonoBehaviour {
 	bool whiteCheckmate = false;
 	// blackCheckmate = white"s win
 	bool blackCheckmate = false;
+	void Start(){
+		//8 by 8, each row is assigned to a letter
+		int rows = 8;
+		int columns = 8;
+	
+		for (int i = 0; i < rows; i++)
+		{
+			for (int j = 1; j < columns + 1; j++)
+			{
+				Vector2 squarePosition = new Vector2(i, j);
+				//first square is dark, second square is light, etc...
+				if ((i + j) % 2 == 0)
+				{
+					squareInstance = Instantiate(lightSquarePrefab);
+				}
+				else
+				{
+					squareInstance = Instantiate(darkSquarePrefab);
+				}
+					squareInstance.transform.position = squarePosition;
+				if (j-1 == 1){
+					Piece pawn = Instantiate (whitePiecesPrefabs[0]) as Piece;
+					pawn.transform.position = squareInstance.transform.position;
+				}
+				else if (j-1 == 6){
+					Piece pawn = Instantiate (blackPiecesPrefabs[0]) as Piece;
+					pawn.transform.position = squareInstance.transform.position;
+				}
+				else if (j-1 == 0){
+					if (i == 0 || i == 7){
+						Piece rook = Instantiate (whitePiecesPrefabs[3]) as Piece;
+						rook.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 1|| i == 6){
+						Piece knight = Instantiate (whitePiecesPrefabs[1]) as Piece;
+						knight.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 2|| i == 5){
+						Piece bishop = Instantiate (whitePiecesPrefabs[2]) as Piece;
+						bishop.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 3){
+						Piece queen = Instantiate (whitePiecesPrefabs[5]) as Piece;
+						queen.transform.position = squareInstance.transform.position;
+					}
+					else{
+						Piece king = Instantiate (whitePiecesPrefabs[4]) as Piece;
+						king.transform.position = squareInstance.transform.position;
+					}
+				}
+				else if (j-1 == 7){
+					if (i == 0 || i == 7){
+						Piece rook = Instantiate (blackPiecesPrefabs[3]) as Piece;
+						rook.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 1|| i == 6){
+						Piece knight = Instantiate (blackPiecesPrefabs[1]) as Piece;
+						knight.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 2|| i == 5){
+						Piece bishop = Instantiate (blackPiecesPrefabs[2]) as Piece;
+						bishop.transform.position = squareInstance.transform.position;
+					}
+					else if (i == 4){
+						Piece queen = Instantiate (blackPiecesPrefabs[5]) as Piece;
+						queen.transform.position = squareInstance.transform.position;
+					}
+					else{
+						Piece king = Instantiate (blackPiecesPrefabs[4]) as Piece;
+						king.transform.position = squareInstance.transform.position;
+					}
+				}
+			}
+		}
+	}
 	public void update(){
 		if (!chessboard [0,0].Equals ("BR"))
 			BLRookMoved = true;
@@ -68,7 +151,7 @@ public class Game : MonoBehaviour {
 			string to = chessboard[rTo,cTo];
 			chessboard[rTo,cTo] = chessboard[rFrom,cFrom];
 			chessboard[rFrom,cFrom] = to;
-			if (chessboard[rFrom,cFrom].StartsWith(currentPlayer)){
+			if (!chessboard[rFrom,cFrom].StartsWith(currentPlayer)){
 				chessboard[rFrom,cFrom]= "  ";
 			}
 			if (isChecked(currentPlayer)){
@@ -77,6 +160,7 @@ public class Game : MonoBehaviour {
 			}
 			else{
 				chessboard[rFrom,cFrom] = "  ";
+				lastMove = new int[] {rTo,cTo};
 				if (currentPlayer.Equals("W"))
 					currentPlayer = "B";
 				else
@@ -113,6 +197,10 @@ public class Game : MonoBehaviour {
 				}
 				//check for black taking pieces
 				else if (rTo == rFrom - 1 && cTo == cFrom + 1 || cTo == cFrom - 1 && !chessboard [rTo, cTo].StartsWith("W")) {
+					return true;
+				}
+				//check for black En Passant
+				else if (rTo == rTo+1 && Mathf.Abs(cFrom-cTo)==1&& lastMove[0] == rTo && lastMove[1] == cTo){
 					return true;
 				}
 			} else if (chessboard [rFrom, cFrom].Equals ("WR") || chessboard [rFrom, cFrom].Equals ("BR") || chessboard [rFrom, cFrom].Equals ("WQ") || chessboard [rFrom, cFrom].Equals ("BQ")) {

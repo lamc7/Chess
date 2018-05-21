@@ -14,7 +14,7 @@ public class CreateBoard : MonoBehaviour {
 
     private string[] rowLetters = { "a", "b", "c", "d", "e", "f", "g", "h" };
 
-    void Start()
+    void Awake()
     {
         Board();
 		for (int i =0; i < 8; i++) {
